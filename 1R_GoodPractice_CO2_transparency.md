@@ -68,9 +68,9 @@ This document is the outcome of a ONE Record pilot project with the "Digitales T
 
 Lufthansa Cargo, Philipp Billion
 
-Souvereign, Heidi Han Yin Luu
+Sovereign Speed, Heidi Han Yin Luu
 
-Souvereign, Moritz Tölke
+Sovereign Speed, Moritz Tölke
 
 Fraunhofer IML, Oliver Ditz
 
@@ -112,7 +112,7 @@ A central assumption is that there is an interest of stakeholders to recieve CO2
 
 The ONE Record data model follows two principles: Piece-centricity and physics-orientation. Piece-centricity is self-explanatory, as every information is linked with the piece as the lowest available transportation object. Physics-orientation means that the linking strucutre of ONE Record follows the structures of the physical world (for more details, please refer to [ONE Record Github Repository](https://github.com/IATA-Cargo/ONE-Record).
 
-The problem here is that the two principles are "collading" by some aspects here: The CO2-Emissions happen to the ***TransportMeans*** as trucks and planes burn fuel, not pieces or shipments. On the other hand, it would not help a data consumer to know that the aircraft with it´s piece onboard burnt a specific ammount of fuel without a brakedown to it´s piece. To close this gap, a set of data objects and process descriptions is described here to enable end-to-end, multi-modal CO2 tracking throughout the supply chain.
+The problem here is that the two principles are "collading" by some aspects here: The CO2-Emissions happen to the ***TransportMeans*** as trucks and planes burn fuel, not pieces or shipments. On the other hand, it would not help a data consumer to know that the aircraft with it´s piece onboard burnt a specific ammount of fuel without a brakedown to it´s piece. To close this gap, a set of data objects and process descriptions is described here to enable end-to-end, multi-modal CO2 tracking throughout the supply chain. The aim is to utilize primary data from the opeartors instead of relying on default and industry standard data.
 
 The vision of this approach is to give even to consumers a transparency on CO2 emissions potentially from the production site to his door, covering all movement of the piece.
 
@@ -163,9 +163,11 @@ Data exchange guidance Table 6 (Mail vom 29.4.2022)
 
 If available, the actually measured fuel consumption is provided in the ***fuelAmountMeasured*** data field. Only if not available, the ***fuelAmountCalculated*** data field should be populated.
 
+- not needed if primary CO2 data is delivered - 
+- 
 ### Data field: totalLoadedWeight
 
-TBD: the total transportation weight is required for climate relevant emission monitoring. Question: How do we deal with this? 
+TBD: the total (actual) transportation weight is required for climate relevant emission monitoring. Question: How do we deal with this? 
 
 Option 1: Assume shipments are not split, so it is the sum of all totalGrossWeighs of the Shipments. Pro: Realistic and exact, con: doesn´t work if shipments are split
 
@@ -173,19 +175,26 @@ Option 2: Sum the pieces on truck. Pro: easy to calculate; con: is not correct (
 
 Option 3: create a new measured value totalLoadedWeight; most accurate, but also available?
 
+ - the total looaded weight is only needed if the operator does not supply CO2 data on a shipment/piece level directly. Otherwise it should be the total weight of all shipments (without eqipment) or a anverage payload % + a max. payload capacity of the vehicle. 
+
 ## payloadDistance LO
 
 The ***payloadDistance*** LO describes the relevant factor for the climateImpact calculation on a truck.
 
-### Data field: payloadDistanceResult (value)
+### Data field: payloadDistanceResult (value) better: Transport Activity
 
-The payloadDistanceResult is a most relevant parameter for the estimation of the climate impact of this transportMovement. It is usually calculated by multiplying the weight and the distance of the transportMovement. Possible units are kilogram-kilometre ("kgkm"), tonne-kilometre ("tkm"), kilometre-tonne ("kmt") and "ton-mile", which is in the US: 1 ton-mile * ( 0.907185 t / short ton) * ( 1.609344 km / mile ) = 1.460 tkm.
+The payloadDistanceResult is a most relevant parameter for the estimation of the climate impact of this transportMovement. It is usually calculated by multiplying the weight and the distance of the transportMovement. Possible units are kilogram-kilometre ("kgkm"), tonne-kilometre ("tkm"), kilometre-tonne ("kmt") and "ton-mile", which is in the US: 1 ton-mile * ( 0.907185 t / short ton) * ( 1.609344 km / mile ) = 1.460 tkm. For handling and transhipment activities tonnes (t).
+
+- this would not be needed on a transport movement level if it is supplied on a shipment/piece level
 
 ### ISOTransparencyLevel (int)
 
 This parameter shows the level of parameters to be included. 
 
 TBD here, e.g. is there a level including the deadhead legs? Etc.
+
+Not sure what you mean with the ISO transparency level
+ In case the carrier does not submit CO2 data, the carrier should share an average empty run rate (% of empty km of total km) and an average utilization rate (% of total loaded weight to max. payload of vehicle)
 
 ### FuelConsumptionParameter
 
@@ -198,12 +207,17 @@ This indicator can be either "measured" or "calculated". It describes the calcul
 ### CO2CoefficiencyFactor
 
 **tbd** required?
+This referes to the fuel emission factor (CO2eKg / l, Kg, Mj of fuel), right? In that case it is required to be either in 1R, linked to the fuel type or to be supplied by the operator directly alongside the fuel type.
+
+ - I am missing the Emission intensity factor (CO2eKg / t-km) here. This would be the value that the operator is supplying on a transport movement level, which is then utilized for the piece calculation.
 
 ### Other data fields
 
 Other data fields like ***departureLocation*** and ***arrivalLocation*** could be used to verify the CO2-Emission relevant data sources. Additionally, relevant information could be added as an ***externalReference***, if only available as PDF. This could also be used for an image or a GPS-track of the geo-locational movement to provide an additional layer of information.
 
 The ***movementType*** has a special relevance here, as it indicates wether this is a planned transport movement or an already  performed one.
+
+- we should add here "Transport operating category" as an optional field. The carrier could indicate here the name/type of the category he has used to calculate the CO2 emissions for this transport movement - tbd
 
 ## transportMeans LO
 
@@ -213,9 +227,13 @@ The ***transportMeans*** describes the means of transportation used to perfom fo
 
 The ***typicalFuelConsumption*** describes an average amount of fuel for a defined distance, e.g. 12 l / 100 km. This does not include the type of fuel, as one of the assumptions is that the consumption doesn´t depend on the type of fuel. When using this, the ***unit*** data field is quite extensively used, with a content like "l/100km".
 
+- Where is this coming from? It could be supplied by the operator in the case he does not provide CO2 data directly.
+
 ### Data field: typicalCO2Coefficient
 
 The ***typicalCO2Coefficient*** describes ??? required?
+
+- this should be Emission Intensity factor. I understood this is currently a default (industry average) one, which is used in case no primary CO2 data is provided.
 
 ### Data field: 
 
@@ -239,11 +257,11 @@ The ***climateEffect*** LO is the Logistics Object documenting the effective cli
 
 ### Data field: CO2equivalentWTW
 
-**tbd**
+- Amount of CO2e in Kg - Well-to-Wheel
 
 ### Data field: CO2equivalentTTW
 
-**tbd**
+- Amount of CO2e in Kg - Well-to-Wheel
 
 ### Data field: MethodName
 
@@ -259,13 +277,15 @@ This data field contains a URL to more details on the calculation method applied
 
 ### Data field: Verification
 
-**tbd**
+- indication if the submitted data has been verified
 
 ### Data field: Accreditation
 
-**tbd**
+- indication if the calculation method used by the operator has been accredited against a specific standard (tbd). This should be the GLEC Framework and in the future ISO 14083:2022
 
 ### Data field: TransportActivity
+
+- Transport Activity (in tonne-km) for the Item on the transport movement
 
 ### Data field:  includedClimateEffects
 
